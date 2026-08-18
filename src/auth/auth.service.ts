@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcrypt';
+import { SignUpDto } from './dto/signup.dto';
+import { SignInDto } from './dto/signin.dto';
 
 @Injectable()
 export class AuthService {
@@ -10,17 +12,14 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signUp(dto: any) {
-    // ກວດສອບວ່າ Email ນີ້ມີໃນລະບົບແລ້ວບໍ
+  async signUp(dto: SignUpDto) {
     const existing = await this.usersService.findByEmail(dto.email);
     if (existing) {
       throw new BadRequestException('Email ຖືກນໍາໃຊ້ແລ້ວ');
     }
 
-    // ເຮັດ Hash ລະຫັດຜ່ານ
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    
-    // ສ້າງ User ໃໝ່
+
     const user = await this.usersService.create({
       ...dto,
       password: hashedPassword,
@@ -29,19 +28,17 @@ export class AuthService {
     const userId = (user as any)._id || (user as any).id;
 
     return {
-      message: 'Sign-up ສໍາເລັດ',
+      message: 'Successfully',
       userId: userId,
     };
   }
 
-  async signIn(dto: any) {
-    // ຄົ້ນຫາ User ຈາກ Email
+  async signIn(dto: SignInDto) {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException('Email ຫຼື Password ບໍ່ຖືກຕ້ອງ');
     }
 
-    // ກວດສອບ Password
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException('Email ຫຼື Password ບໍ່ຖືກຕ້ອງ');
@@ -49,11 +46,12 @@ export class AuthService {
 
     const userId = (user as any)._id || (user as any).id;
 
-    // ສ້າງ JWT Payload
     const payload = {
       sub: userId,
       email: user.email,
       role: user.role || 'user',
+      firstName: user.firstName,
+      lastName: user.lastName,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -61,6 +59,8 @@ export class AuthService {
     return {
       access_token: accessToken,
       token_type: 'Bearer',
+      firstName: user.firstName ,
+      lastName: user.lastName ,
     };
   }
 

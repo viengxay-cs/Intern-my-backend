@@ -2,25 +2,25 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Patch,
   Delete,
   Body,
   Param,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { CreateProductDto } from './dto/create-product.dto'; // Import ເພີ່ມ
+import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
-@UseGuards(JwtAuthGuard) // ປ້ອງກັນທຸກ Route ດ້ວຍ JWT
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  // Public — no login required to view
   @Get()
   getAll() {
     return this.productsService.findAll();
@@ -31,24 +31,21 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Post()
-  create(@Body() createProductDto: CreateProductDto) { // ໃຊ້ CreateProductDto
-    return this.productsService.create(createProductDto);
+  create(@Body() createProductDto: CreateProductDto, @Req() req) {
+    return this.productsService.create(createProductDto, req.user.userId);
   }
 
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
-  @Patch(':id') // ໃຊ້ @Patch ເໝາະສົມກັບ Partial Update ຫຼາຍກວ່າ @Put
-  update(
-    @Param('id') id: string,
-    @Body() updateProductDto: UpdateProductDto, // ໃຊ້ UpdateProductDto
-  ) {
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productsService.update(id, updateProductDto);
   }
 
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Delete(':id')
   remove(@Param('id') id: string) {
