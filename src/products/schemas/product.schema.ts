@@ -18,6 +18,9 @@ export class Product extends Document {
   @Prop({ required: false })
   description?: string;
 
+  @Prop({ required: true, default: 0 })
+  stock!: number;
+
   @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
   category!: Types.ObjectId;
 
