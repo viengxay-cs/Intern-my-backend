@@ -24,4 +24,11 @@ export class UsersService {
   async findById(id: string): Promise<User | null> {
     return this.userModel.findById(id).exec();
   }
+
+  async updateProfileImage(userId: string, imagePath: string): Promise<User | null> {
+    return this.userModel
+      .findByIdAndUpdate(userId, { profileImage: imagePath }, { returnDocument: 'after' })
+      .exec();
+  }
+  
 }

@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Category } from './schemas/category.schema';
+import { CreateCategoryDto } from './dto/create-category.dto';
+import { UpdateCategoryDto } from './dto/update-category.dto';
 
 const CREATOR_FIELDS = 'firstName lastName role';
 
@@ -11,7 +13,7 @@ export class CategoriesService {
     @InjectModel(Category.name) private categoryModel: Model<Category>,
   ) {}
 
-  async create(createCategoryDto: any, userId: string): Promise<Category> {
+  async create(createCategoryDto: CreateCategoryDto, userId: string): Promise<Category> {
     const createdCategory = new this.categoryModel({
       ...createCategoryDto,
       createdBy: userId,
@@ -23,7 +25,7 @@ export class CategoriesService {
     return this.categoryModel.find().populate('createdBy', CREATOR_FIELDS).exec();
   }
 
-  async update(id: string, updateCategoryDto: any): Promise<Category> {
+  async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
     const updatedCategory = await this.categoryModel
       .findByIdAndUpdate(id, updateCategoryDto, { returnDocument: 'after' })
       .exec();
